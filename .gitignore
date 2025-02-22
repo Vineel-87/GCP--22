@@ -1,0 +1,29 @@
+# Hard Level oncept -Google cloud Platform
+"""Concept of Gps Track system -weather located"
+
+
+
+from google.cloud import compute_v1
+
+def create_instance(project_id, zone, instance_name, machine_type="n1-standard-1", image_family="debian-11"):
+    instance_client = compute_v1.InstancesClient()
+    
+    image_response = compute_v1.ImagesClient().get_from_family(
+        project="debian-cloud", family=image_family)
+    source_disk_image = image_response.self_link
+
+    instance = compute_v1.Instance(
+        name=instance_name,
+        machine_type=f"zones/{zone}/machineTypes/{machine_type}",
+        disks=[compute_v1.AttachedDisk(
+            boot=True, auto_delete=True,
+            initialize_params=compute_v1.AttachedDiskInitializeParams(
+                source_image=source_disk_image)
+        )],
+        network_interfaces=[compute_v1.NetworkInterface(
+            name="global/networks/default")],
+    )
+
+    operation = instance_client.insert(
+        project=project_id, zone=zone, instance_resource=instance)
+    print(f"Instance {instance_name} created: {operation}")
